@@ -28,6 +28,13 @@
       </select>
       <button id="addBtn">Ajouter</button>
     </section>
+    <!-- Import/Export -->
+    <section class="io-section">
+      <button id="exportBtn">📤 Exporter</button>
+      <button id="importBtn">📥 Importer</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+    </section>
+
 
 
     <section class="sort-options">
@@ -103,6 +110,67 @@
       const sortOrder = document.getElementById('sortOrder');
       const yearSelect = document.getElementById('yearSelect');
       const themeSelect = document.getElementById('themeSelect');
+
+      // — Exporter la bibliothèque en JSON —
+      function exportLibrary() {
+        const dataStr = JSON.stringify(library, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'bibliotheque.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // — Importer un fichier JSON —
+      function importLibrary(file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          try {
+            const imported = JSON.parse(e.target.result);
+            if (!Array.isArray(imported)) throw new Error('Format invalide');
+            // On peut éventuellement valider ici chaque objet
+            library = imported.map(item => ({
+              title: item.title || '',
+              pages: item.pages || 0,
+              read: item.read || 0,
+              cover: item.cover || '',
+              author: item.author || '',
+              type: item.type || 'livre',
+              readDate: item.readDate || '',
+              rating: item.rating || 0,
+              comment: item.comment || ''
+            }));
+            saveLibrary();
+            populateYearFilter();
+            render();
+            alert('Importation réussie ! 📚');
+          } catch (err) {
+            alert('Échec de l’import : fichier invalide');
+            console.error(err);
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      // — Brancher les boutons —
+      const exportBtn = document.getElementById('exportBtn');
+      const importBtn = document.getElementById('importBtn');
+      const importFile = document.getElementById('importFile');
+
+      exportBtn.addEventListener('click', exportLibrary);
+
+      importBtn.addEventListener('click', () => importFile.click());
+
+      importFile.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (file) importLibrary(file);
+        // réinitialise pour permettre de réimporter le même fichier si besoin
+        importFile.value = '';
+      });
 
       // — Chargement / sauvegarde —
       let library = [];
