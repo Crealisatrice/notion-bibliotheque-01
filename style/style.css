@@ -196,9 +196,15 @@ h2:hover {
 .toggle-icon {
   display: inline-block;
   transition: transform 0.3s ease;
+  margin-left: 0.5rem;
 }
 
-h2.collapsed .toggle-icon {
+.collapsible {
+  cursor: pointer;
+  user-select: none;
+}
+
+.collapsible.collapsed .toggle-icon {
   transform: rotate(-90deg);
 }
 /* Commentaire */
