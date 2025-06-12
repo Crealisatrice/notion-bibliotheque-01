@@ -1,0 +1,218 @@
+/* Thème nature (vert) */
+body.nature {
+  background: linear-gradient(to top, #96fbc4 0%, #f9f586 100%);
+  color: #2f4f4f;
+}
+body.nature .card {
+  background: #f0fff0;
+}
+body.nature .stats {
+    background: #d9f9d9;
+}
+body.nature .card button,
+body.nature .add-form button{
+  background-color: #b0e06b;
+  color: white;
+}
+body.nature .card button:hover,
+body.nature .add-form button:hover {
+  background-color: #498a53;
+  color: white;
+}
+body.nature .star.filled {
+  color: #b0e06b;
+}
+
+body.nature input:focus, 
+body.nature select:focus, 
+body.nature button:focus{
+    border-color: #ffdb83;
+}
+/* theme the background-image: linear-gradient(to top, #d5dee7 0%, #ffafbd 0%, #c9ffbf 100%); */
+
+/* Thème vintage (beige) */
+body.vintage {
+  background: linear-gradient(to top, #e6b980 0%, #ffeccc 100%);
+  color: #504538;
+}
+body.vintage .card {
+  background: #f4e5e0;
+}
+body.vintage .stats {
+    background: #f4e5e0;
+}
+body.vintage .card button,
+body.vintage .add-form button{
+  background-color: #e6b980;
+  color: white;
+}
+body.vintage .card button:hover,
+body.vintage .add-form button:hover {
+  background-color: #ac844e;
+  color: white;
+}
+body.vintage .star.filled {
+  color: #ac844e;
+}
+
+body.vintage input:focus, 
+body.vintage select:focus,
+body.vintage button:focus{
+    border-color: #4b8178;
+}
+
+/* Thème the (vert rose) */
+body.the {
+  background: linear-gradient(to top, #d5dee7 0%, #ffafbd 0%, #c9ffbf 100%);
+  color: #551527;
+}
+body.the .card {
+  background: #fff5f7;
+}
+body.the .stats {
+    background: #e0f8d1;
+}
+body.the .card button,
+body.the .add-form button{
+  background-color: #ffafbd;
+  color: white;
+}
+body.the .card button:hover,
+body.the .add-form button:hover {
+  background-color: #c57a88;
+  color: white;
+}
+body.the .star.filled {
+  color: #c57a88;
+}
+
+body.the input:focus,
+body.the select:focus,
+body.the button:focus{
+    border-color: #a93f68;
+}
+
+/* Thème romance (rose) */
+body.romance {
+  background: linear-gradient(to right, #ffe5ec, #ffc2d1);
+  color: #6b2f33;
+}
+body.romance .card {
+  background: #fff0f5;
+}
+body.romance .stats {
+    background: linear-gradient(to right, #fab6bd 0%, #f08f9f 100%);
+
+}
+body.romance .card button,
+body.romance .add-form button{
+  background-color: #d84c6f;
+  color: white;
+}
+body.romance .card button:hover,
+body.romance .add-form button:hover {
+  background-color: #c92e54;
+  color: white;
+}
+body.romance .star.filled {
+  color: #c92e54;
+}
+
+body.romance input:focus, 
+body.romance select:focus, 
+body.romance button:focus {
+    border-color: #a93f68;
+}
+
+/* Thème solaire (jaune-orange) */
+body.solaire {
+  background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+  color: #e06c07;
+}
+body.solaire .card {
+  background: #fae1cc;
+}
+body.solaire .stats {
+    background: #f4d0b3;
+}
+body.solaire .card button,
+body.solaire .add-form button{
+  background-color: #fda085;
+  color: white;
+}
+body.solaire .card button:hover,
+body.solaire .add-form button:hover {
+  background-color: #eb7352;
+  color: white;
+}
+body.solaire .star.filled {
+  color: #fcbd1f;
+}
+
+body.solaire input:focus, 
+body.solaire select:focus, 
+body.solaire button:focus{
+    border-color: #ffdb83;
+}
+
+
+/* Thème magie (mauve) */
+body.magie {
+  background: linear-gradient(to right, #d1c4e9, #ede7f6);
+  color: #4a148c;
+}
+body.magie .card {
+  background: #f3e5f5;
+  color: #4a148c;
+}
+body.magie .stats,
+body.magie .card button {
+    background: #ccaff2;
+}
+body.magie .add-form button{
+  background-color: #795f9b;
+}
+body.magie .add-form button:hover {
+  background-color: #6b4f91;
+}
+body.magie input:focus, 
+body.magie select:focus, 
+body.magie button:focus{
+    border-color: #ffdb83;
+}
+
+
+/* Thème fantastique (bleu clair) */
+body.fantastique {
+  background: linear-gradient(to right, #cfd8dc, #b0bec5, #44698f);
+  color: #07338a;
+}
+body.fantastique .card,
+body.fantastique .stats {
+  background: #e6f4f1;
+  color: #07338a;
+}
+
+body.fantastique .card button,
+body.fantastique .add-form button{
+  background-color: #5f77b3;
+  color: white;
+}
+body.fantastique .add-form button:hover {
+  background-color: #237793;
+}
+body.fantastique .star.filled {
+  color: #793df9;
+}
+
+body.fantastique input:focus, 
+body.fantastique select:focus, 
+body.fantastique button:focus{
+    border-color: #b38df0;
+}
+
+body select, body input, body button {
+  background: inherit;
+  color: inherit;
+  border-color: #ccc;
+}

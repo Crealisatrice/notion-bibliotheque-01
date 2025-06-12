@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ma Bibliothèque</title>
+  <link rel="stylesheet" href="style/style.css">
+  <link rel="stylesheet" href="style/theme.css">
+  <link rel="stylesheet" href="style/typo.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Quicksand:wght@500&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <main>
+    <h1>📚 Ma Bibliothèque</h1>
+    <section class="add-form">
+      <input type="text" id="title" placeholder="Titre">
+      <input type="number" id="pages" placeholder="Pages (max)">
+      <input type="text" id="cover" placeholder="URL de la couverture">
+      <input type="text" id="author" placeholder="Auteur">
+      <select id="type">
+        <option value="livre">📖 Livre</option>
+        <option value="manga">📘 Manga</option>
+      </select>
+      <button id="addBtn">Ajouter</button>
+    </section>
+
+
+    <section class="sort-options">
+      <label for="sortSelect">Filtrer par :</label>
+      <select id="sortSelect">
+        <option value="all">Années</option>
+      </select>
+      <select id="sortCriteria">
+        <option value="rating">Note</option>
+        <option value="author">Auteur</option>
+      </select>
+      <select id="sortOrder">
+        <option value="desc">Décroissant</option>
+        <option value="asc">Croissant</option>
+      </select>
+
+      <label for="themeSelect">Thème :</label>
+      <select id="themeSelect">
+        <option value="nature">Nature</option>
+        <option value="vintage">Vintage</option>
+        <option value="the">Thé</option>
+        <option value="romance">Romance</option>
+        <option value="solaire">Solaire</option>
+        <option value="fantastique">Fantastique</option>
+      </select>
+    </section>
+
+    <section>
+      <h2 onclick="toggleVisibility('enviesList', this)">
+        📚 Mes envies <span class="toggle-icon">▼</span>
+      </h2>
+      <div id="enviesList" class="grid"></div>
+    </section>
+
+    <section>
+      <h2 onclick="toggleVisibility('lectureList', this)">
+        📖 Mes lectures <span class="toggle-icon">▼</span>
+      </h2>
+      <div id="lectureList" class="grid"></div>
+    </section>
+
+    <section>
+      <h2 onclick="toggleVisibility('finishedList', this)">
+        ✅ Livres lus <span class="toggle-icon">▼</span>
+      </h2>
+      <div id="finishedList" class="grid"></div>
+    </section>
+
+    <section class="stats">
+      <p><strong>📘 Mangas lus :</strong> <span id="mangaCount">0</span></p>
+      <p><strong>📖 Livres lus :</strong> <span id="bookCount">0</span></p>
+      <p><strong>Total pages lues :</strong> <span id="pageCount">0</span></p>
+    </section>
+  </main>
+
+  <script>
+    const addBtn = document.getElementById('addBtn');
+    const readingList = document.getElementById('readingList');
+    const finishedList = document.getElementById('finishedList');
+    const mangaCount = document.getElementById('mangaCount');
+    const bookCount = document.getElementById('bookCount');
+    const pageCount = document.getElementById('pageCount');
+    const sortSelect = document.getElementById('sortSelect');
+    const themeSelect = document.getElementById('themeSelect');
+
+    let library = JSON.parse(localStorage.getItem('library') || '[]');
+
+    function saveLibrary() {
+      localStorage.setItem('library', JSON.stringify(library));
+    }
+
+    function loadLibrary() {
+      library = JSON.parse(localStorage.getItem('library') || '[]')
+        .map(item => ({
+          // si item.author est undefined, on le force à chaîne vide
+          author: item.author || '',
+          rating: item.rating || 0,
+          read: item.read || 0,
+          // on repart de tous les autres champs
+          ...item
+        }));
+      render();
+    }
+
+    window.onload = loadLibrary;
+
+    function sortLibrary(criteria, order) {
+      library.sort((a, b) => {
+        if (criteria === 'rating') {
+          const ra = a.rating || 0;
+          const rb = b.rating || 0;
+          return order === 'asc' ? ra - rb : rb - ra;
+        }
+        if (criteria === 'author') {
+          // on force à chaîne vide si undefined
+          const authorA = (a.author || '').toLowerCase();
+          const authorB = (b.author || '').toLowerCase();
+          return order === 'asc'
+            ? authorA.localeCompare(authorB)
+            : authorB.localeCompare(authorA);
+        }
+        return 0;
+      });
+    }
+
+    function getUniqueYears() {
+      const years = new Set();
+      library.forEach(item => {
+        if (item.readDate) {
+          years.add(new Date(item.readDate).getFullYear());
+        }
+      });
+      return Array.from(years).sort();
+    }
+
+    function populateYearFilter() {
+      const years = getUniqueYears();
+      sortSelect.innerHTML = '<option value="all">Années</option>';
+      years.forEach(y => {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        sortSelect.appendChild(opt);
+      });
+    }
+    function toggleVisibility(id, header) {
+      const el = document.getElementById(id);
+      if (el.style.display === 'none' || !el.style.display) {
+        el.style.display = 'grid';
+        header.classList.remove('collapsed');
+      } else {
+        el.style.display = 'none';
+        header.classList.add('collapsed');
+      }
+    }
+
+    function render() {
+      const enviesList = document.getElementById('enviesList');
+      const lectureList = document.getElementById('lectureList');
+      const finishedList = document.getElementById('finishedList');
+
+      enviesList.innerHTML = '';
+      lectureList.innerHTML = '';
+      finishedList.innerHTML = '';
+
+      // --- NOUVEAU : compteurs de stats ---
+      let mangasFinished = 0;
+      let booksFinished = 0;
+      let pagesTotal = 0;
+
+      // Récupère les critères de tri
+      const sortCriteria = document.getElementById('sortCriteria').value;
+      const sortOrder = document.getElementById('sortOrder').value;
+      sortLibrary(sortCriteria, sortOrder);
+
+      library.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.setAttribute('data-type', item.type);
+
+        card.innerHTML = `
+      <img src="${item.cover}" alt="cover">
+  <h3>${item.title}</h3>
+  <p>Auteur : ${item.author}</p>
+  <p>Pages : ${item.read}/${item.pages}</p>
+  <input type="number" min="0" max="${item.pages}" value="${item.read}"
+         data-index="${index}" class="progressInput">
+  <input type="month" class="readDate"
+         data-index="${index}" value="${item.readDate || ''}">
+  <div class="rating" data-index="${index}">
+    ${[1, 2, 3, 4, 5].map(i =>
+          `<span class="star ${i <= item.rating ? 'filled' : ''}" data-value="${i}">&#9733;</span>`
+        ).join('')}
+  </div>
+  <button data-comment-toggle="${index}" class="commentBtn">💬 Commentaire</button>
+  <div class="commentSection" id="comment-${index}" style="display:none;">
+    <textarea data-index="${index}" class="commentInput" 
+              placeholder="Tes pensées…">${item.comment}</textarea>
+    <button data-comment-save="${index}" class="saveCommentBtn">💾 Sauvegarder</button>
+  </div>
+  <button data-delete="${index}" class="deleteBtn">🗑️ Supprimer</button>
+    `;
+
+        if (item.read === 0) {
+          enviesList.appendChild(card);
+        } else if (item.read < item.pages) {
+          lectureList.appendChild(card);
+        } else {
+          // Livre terminé → on l'affiche et on met à jour les stats
+          finishedList.appendChild(card);
+
+          if (item.type === 'manga') mangasFinished++;
+          else booksFinished++;
+
+          pagesTotal += item.read;
+        }
+      });
+
+      // --- NOUVEAU : mise à jour des compteurs dans le DOM ---
+      document.getElementById('mangaCount').textContent = mangasFinished;
+      document.getElementById('bookCount').textContent = booksFinished;
+      document.getElementById('pageCount').textContent = pagesTotal;
+
+      addEventListeners();
+    }
+
+    function addEventListeners() {
+      document.querySelectorAll('.progressInput').forEach(input => {
+        input.addEventListener('change', e => {
+          const index = e.target.dataset.index;
+          library[index].read = parseInt(e.target.value);
+          render();
+          saveLibrary();
+        });
+      });
+
+      document.querySelectorAll('.readDate').forEach(input => {
+        input.addEventListener('change', e => {
+          const index = e.target.dataset.index;
+          library[index].readDate = e.target.value;
+          saveLibrary();
+        });
+      });
+
+      document.querySelectorAll('.star').forEach(star => {
+        star.addEventListener('click', e => {
+          const index = e.target.closest('.rating').dataset.index;
+          const rating = parseInt(e.target.dataset.value);
+          library[index].rating = rating;
+          render();
+          saveLibrary();
+        });
+      });
+
+      document.querySelectorAll('.deleteBtn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const index = e.target.dataset.delete;
+          library.splice(index, 1);
+          render();
+          saveLibrary();
+        });
+      });
+      // Toggle affichage de la zone de commentaire
+      document.querySelectorAll('.commentBtn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const idx = e.target.dataset.commentToggle;
+          const section = document.getElementById(`comment-${idx}`);
+          section.style.display = section.style.display === 'none' ? 'block' : 'none';
+        });
+      });
+
+      // Sauvegarder le commentaire
+      document.querySelectorAll('.saveCommentBtn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const idx = e.target.dataset.commentSave;
+          const textarea = document.querySelector(`.commentInput[data-index="${idx}"]`);
+          library[idx].comment = textarea.value;
+          saveLibrary();
+          // Optionnel : feedback utilisateur
+          btn.textContent = '✅ Sauvé';
+          setTimeout(() => btn.textContent = '💾 Sauvegarder', 1000);
+        });
+      });
+    }
+
+
+    addBtn.addEventListener('click', () => {
+      const title = document.getElementById('title').value;
+      const pages = parseInt(document.getElementById('pages').value);
+      const cover = document.getElementById('cover').value;
+      const type = document.getElementById('type').value;
+      const author = document.getElementById('author').value;
+      // const readDate = document.getElementById('readDate').value;
+
+      if (!title || !pages || !cover) return alert('Tous les champs sont requis');
+
+      library.push({
+        title, pages, read: 0, cover, author, type, readDate: null,
+        rating: 0, // 0 = pas encore noté
+        comment: ''
+      });
+      saveLibrary();
+      populateYearFilter();
+      render();
+
+      document.getElementById('title').value = '';
+      document.getElementById('pages').value = '';
+      document.getElementById('cover').value = '';
+      document.getElementById('author').value = '';
+    });
+
+    sortSelect.addEventListener('change', render);
+
+    themeSelect.addEventListener('change', () => {
+      document.body.className = themeSelect.value;
+      localStorage.setItem('theme', themeSelect.value);
+    });
+
+    // Apply saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.className = savedTheme;
+    themeSelect.value = savedTheme;
+
+    document.getElementById('sortCriteria').addEventListener('change', render);
+    document.getElementById('sortOrder').addEventListener('change', render);
+
+    populateYearFilter();
+    render();
+
+
+  </script>
+</body>
+
+</html>
