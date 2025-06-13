@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,8 +10,10 @@
   <link rel="stylesheet" href="style/typo.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Quicksand:wght@500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Quicksand:wght@500&display=swap"
+    rel="stylesheet">
 </head>
+
 <body>
   <main>
     <h1>Ma Bibliothèque</h1>
@@ -49,7 +52,9 @@
         <option value="asc">Croissant</option>
       </select>
       <label for="yearSelect">Filtrer par année :</label>
-      <select id="yearSelect"><option value="all">Toutes</option></select>
+      <select id="yearSelect">
+        <option value="all">Toutes</option>
+      </select>
       <label for="themeSelect">Thème :</label>
       <select id="themeSelect">
         <option value="nature">Nature</option>
@@ -112,10 +117,10 @@
       let library = [];
       const saveLibrary = () => localStorage.setItem('library', JSON.stringify(library));
       function loadLibrary() {
-        library = JSON.parse(localStorage.getItem('library')||'[]').map(item => ({
-          author: item.author||'', rating: item.rating||0,
-          read: item.read||0, comment: item.comment||'',
-          readDate: item.readDate||'', ...item
+        library = JSON.parse(localStorage.getItem('library') || '[]').map(item => ({
+          author: item.author || '', rating: item.rating || 0,
+          read: item.read || 0, comment: item.comment || '',
+          readDate: item.readDate || '', ...item
         }));
         populateYearFilter(); render();
       }
@@ -123,7 +128,7 @@
       // Year filter
       function getUniqueYears() {
         const years = new Set();
-        library.forEach(({ readDate }) => readDate && years.add(readDate.substring(0,4)));
+        library.forEach(({ readDate }) => readDate && years.add(readDate.substring(0, 4)));
         return [...years].sort();
       }
       function populateYearFilter() {
@@ -138,12 +143,12 @@
 
       // Sorting
       function sortLibrary(criteria, order) {
-        library.sort((a,b) => {
-          if (criteria === 'rating') return order==='asc' ? a.rating - b.rating : b.rating - a.rating;
+        library.sort((a, b) => {
+          if (criteria === 'rating') return order === 'asc' ? a.rating - b.rating : b.rating - a.rating;
           if (criteria === 'author') {
-            const A = (a.author||'').toLowerCase();
-            const B = (b.author||'').toLowerCase();
-            return order==='asc' ? A.localeCompare(B) : B.localeCompare(A);
+            const A = (a.author || '').toLowerCase();
+            const B = (b.author || '').toLowerCase();
+            return order === 'asc' ? A.localeCompare(B) : B.localeCompare(A);
           }
           return 0;
         });
@@ -152,11 +157,11 @@
       // Render
       function render() {
         enviesList.innerHTML = lectureList.innerHTML = finishedList.innerHTML = '';
-        let mangasFinished=0, booksFinished=0, bdFinished=0, pagesTotal=0;
+        let mangasFinished = 0, booksFinished = 0, bdFinished = 0, pagesTotal = 0;
         const yf = yearSelect.value;
         sortLibrary(sortCriteria.value, sortOrder.value);
         library.forEach((item, idx) => {
-          if (yf!=='all' && (item.readDate||'').substring(0,4) !== yf) return;
+          if (yf !== 'all' && (item.readDate || '').substring(0, 4) !== yf) return;
           const card = document.createElement('div');
           card.className = 'card'; card.setAttribute('data-type', item.type);
           card.innerHTML = `
@@ -165,9 +170,9 @@
             <p>Auteur : ${item.author}</p>
             <p>Pages : ${item.read}/${item.pages}</p>
             <input type="number" min="0" max="${item.pages}" value="${item.read}" data-index="${idx}" class="progressInput">
-            <input type="month" value="${item.readDate||''}" data-index="${idx}" class="readDate">
+            <input type="month" value="${item.readDate || ''}" data-index="${idx}" class="readDate">
             <div class="rating" data-index="${idx}">
-              ${[1,2,3,4,5].map(i => `<span class="star ${i<=item.rating?'filled':''}" data-value="${i}">&#9733;</span>`).join('')}
+              ${[1, 2, 3, 4, 5].map(i => `<span class="star ${i <= item.rating ? 'filled' : ''}" data-value="${i}">&#9733;</span>`).join('')}
             </div>
             <button data-comment-toggle="${idx}" class="commentBtn">💬 Commentaire</button>
             <div id="comment-${idx}" class="commentSection" style="display:none;">
@@ -205,12 +210,14 @@
           star.onclick = e => { const i = star.closest('.rating').dataset.index; library[i].rating = +star.dataset.value; saveLibrary(); render(); };
         });
         document.querySelectorAll('.commentBtn').forEach(btn => {
-          btn.onclick = e => { const i = btn.dataset.commentToggle; const sec = document.getElementById(`comment-${i}`);
-            sec.style.display = sec.style.display==='none' ? 'block' : 'none';
+          btn.onclick = e => {
+            const i = btn.dataset.commentToggle; const sec = document.getElementById(`comment-${i}`);
+            sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
           };
         });
         document.querySelectorAll('.saveCommentBtn').forEach(btn => {
-          btn.onclick = e => { const i = btn.dataset.commentSave; const ta = document.querySelector(`.commentInput[data-index="${i}"]`);
+          btn.onclick = e => {
+            const i = btn.dataset.commentSave; const ta = document.querySelector(`.commentInput[data-index="${i}"]`);
             library[i].comment = ta.value; saveLibrary(); btn.textContent = '✅ Sauvé'; setTimeout(() => btn.textContent = '💾 Sauvegarder', 1000);
           };
         });
@@ -257,10 +264,16 @@
       // Import/Export handlers
       document.getElementById('exportBtn').onclick = () => {
         const data = JSON.stringify(library, null, 2);
-        const blob = new Blob([data], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'bibliotheque.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        // 1) copie dans le presse-papier
+        navigator.clipboard.writeText(data)
+          .then(() => alert('JSON copié dans le presse-papiers !'))
+          .catch(() => alert('Impossible de copier automatiquement.'));
+
+        // 2) ouvre quand même le JSON dans un nouvel onglet
+        const url = 'data:application/json;charset=utf-8,' + encodeURIComponent(data);
+        window.open(url, '_blank');
       };
+
       document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
       document.getElementById('importFile').onchange = e => {
         const file = e.target.files[0];
@@ -298,8 +311,8 @@
 
       // Sort, filter, theme listeners
       sortCriteria.onchange = render;
-      sortOrder.onchange    = render;
-      yearSelect.onchange   = render;
+      sortOrder.onchange = render;
+      yearSelect.onchange = render;
       const savedTheme = localStorage.getItem('theme') || 'nature';
       document.body.className = savedTheme;
       themeSelect.value = savedTheme;
@@ -319,4 +332,5 @@
     });
   </script>
 </body>
+
 </html>
