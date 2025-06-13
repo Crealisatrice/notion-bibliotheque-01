@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,24 +9,28 @@
   <link rel="stylesheet" href="style/typo.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Quicksand:wght@500&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Quicksand:wght@500&display=swap" rel="stylesheet">
 </head>
-
 <body>
   <main>
     <h1>Ma Bibliothèque</h1>
     <section class="add-form">
+      <!-- Recherche tous supports -->
+      <input type="text" id="bookSearch" placeholder="🔍 Titre, ISBN ou auteur">
+      <div id="suggestions" class="suggestions"></div>
+      <!-- Champs préremplis / modifiables -->
       <input type="text" id="title" placeholder="Titre">
+      <input type="text" id="author" placeholder="Auteur">
       <input type="number" id="pages" placeholder="Pages (max)">
       <input type="text" id="cover" placeholder="URL de la couverture">
-      <input type="text" id="author" placeholder="Auteur">
       <select id="type">
         <option value="livre">📙 Livre</option>
         <option value="manga">📘 Manga</option>
+        <option value="bd">📕 BD</option>
       </select>
       <button id="addBtn">Ajouter</button>
     </section>
+
     <!-- Import/Export -->
     <section class="io-section">
       <button id="exportBtn">📤 Exporter</button>
@@ -35,10 +38,7 @@
       <input type="file" id="importFile" accept="application/json" style="display:none;">
     </section>
 
-
-
     <section class="sort-options">
-      <!-- Trier par note / auteur… -->
       <label for="sortCriteria">Trier par :</label>
       <select id="sortCriteria">
         <option value="rating">Note</option>
@@ -48,13 +48,8 @@
         <option value="desc">Décroissant</option>
         <option value="asc">Croissant</option>
       </select>
-
-      <!-- Nouveau filtre par année -->
       <label for="yearSelect">Filtrer par année :</label>
-      <select id="yearSelect">
-        <option value="all">Toutes</option>
-      </select>
-
+      <select id="yearSelect"><option value="all">Toutes</option></select>
       <label for="themeSelect">Thème :</label>
       <select id="themeSelect">
         <option value="nature">Nature</option>
@@ -63,142 +58,73 @@
         <option value="romance">Romance</option>
         <option value="solaire">Solaire</option>
         <option value="fantastique">Fantastique</option>
+        <option value="sombre">Sombre</option>
       </select>
     </section>
 
     <section>
-      <h2 class="collapsible">
-        💟 Mes envies <span class="toggle-icon">▼</span>
-      </h2>
+      <h2 class="collapsible">💟 Mes envies <span class="toggle-icon">▼</span></h2>
       <div id="enviesList" class="grid"></div>
     </section>
 
     <section>
-      <h2 class="collapsible">
-        📖 Mes lectures <span class="toggle-icon">▼</span>
-      </h2>
+      <h2 class="collapsible">📖 Mes lectures <span class="toggle-icon">▼</span></h2>
       <div id="lectureList" class="grid"></div>
     </section>
 
     <section>
-      <h2 class="collapsible">
-        📔 Livres lus <span class="toggle-icon">▼</span>
-      </h2>
+      <h2 class="collapsible">📔 Livres lus <span class="toggle-icon">▼</span></h2>
       <div id="finishedList" class="grid"></div>
     </section>
 
     <section class="stats">
       <p><strong>📘 Mangas lus :</strong> <span id="mangaCount">0</span></p>
       <p><strong>📙 Livres lus :</strong> <span id="bookCount">0</span></p>
+      <p><strong>📕 BD lus :</strong> <span id="bdCount">0</span></p>
       <p><strong>Total pages lues :</strong> <span id="pageCount">0</span></p>
     </section>
   </main>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // — Références DOM —
+      // DOM elements
       const addBtn = document.getElementById('addBtn');
       const enviesList = document.getElementById('enviesList');
       const lectureList = document.getElementById('lectureList');
       const finishedList = document.getElementById('finishedList');
-
       const mangaCount = document.getElementById('mangaCount');
       const bookCount = document.getElementById('bookCount');
+      const bdCount = document.getElementById('bdCount');
       const pageCount = document.getElementById('pageCount');
-
       const sortCriteria = document.getElementById('sortCriteria');
       const sortOrder = document.getElementById('sortOrder');
       const yearSelect = document.getElementById('yearSelect');
       const themeSelect = document.getElementById('themeSelect');
+      const typeSelect = document.getElementById('type');
+      const bookSearch = document.getElementById('bookSearch');
+      const suggestions = document.getElementById('suggestions');
+      const titleInput = document.getElementById('title');
+      const authorInput = document.getElementById('author');
+      const pagesInput = document.getElementById('pages');
+      const coverInput = document.getElementById('cover');
 
-      // — Exporter la bibliothèque en JSON —
-      function exportLibrary() {
-        const dataStr = JSON.stringify(library, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'bibliotheque.json';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      }
-
-      // — Importer un fichier JSON —
-      function importLibrary(file) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          try {
-            const imported = JSON.parse(e.target.result);
-            if (!Array.isArray(imported)) throw new Error('Format invalide');
-            // On peut éventuellement valider ici chaque objet
-            library = imported.map(item => ({
-              title: item.title || '',
-              pages: item.pages || 0,
-              read: item.read || 0,
-              cover: item.cover || '',
-              author: item.author || '',
-              type: item.type || 'livre',
-              readDate: item.readDate || '',
-              rating: item.rating || 0,
-              comment: item.comment || ''
-            }));
-            saveLibrary();
-            populateYearFilter();
-            render();
-            alert('Importation réussie ! 📚');
-          } catch (err) {
-            alert('Échec de l’import : fichier invalide');
-            console.error(err);
-          }
-        };
-        reader.readAsText(file);
-      }
-
-      // — Brancher les boutons —
-      const exportBtn = document.getElementById('exportBtn');
-      const importBtn = document.getElementById('importBtn');
-      const importFile = document.getElementById('importFile');
-
-      exportBtn.addEventListener('click', exportLibrary);
-
-      importBtn.addEventListener('click', () => importFile.click());
-
-      importFile.addEventListener('change', e => {
-        const file = e.target.files[0];
-        if (file) importLibrary(file);
-        // réinitialise pour permettre de réimporter le même fichier si besoin
-        importFile.value = '';
-      });
-
-      // — Chargement / sauvegarde —
+      // Local storage
       let library = [];
-      function saveLibrary() {
-        localStorage.setItem('library', JSON.stringify(library));
-      }
+      const saveLibrary = () => localStorage.setItem('library', JSON.stringify(library));
       function loadLibrary() {
-        library = JSON.parse(localStorage.getItem('library') || '[]')
-          .map(item => ({
-            // normalisation des anciennes entrées
-            author: item.author || '',
-            rating: item.rating || 0,
-            read: item.read || 0,
-            comment: item.comment || '',
-            readDate: item.readDate || '',
-            ...item
-          }));
-        populateYearFilter();
-        render();
+        library = JSON.parse(localStorage.getItem('library')||'[]').map(item => ({
+          author: item.author||'', rating: item.rating||0,
+          read: item.read||0, comment: item.comment||'',
+          readDate: item.readDate||'', ...item
+        }));
+        populateYearFilter(); render();
       }
 
-      // — Filtre années —
+      // Year filter
       function getUniqueYears() {
         const years = new Set();
-        library.forEach(({ readDate }) => {
-          if (readDate) years.add(readDate.substring(0, 4));
-        });
-        return Array.from(years).sort();
+        library.forEach(({ readDate }) => readDate && years.add(readDate.substring(0,4)));
+        return [...years].sort();
       }
       function populateYearFilter() {
         yearSelect.innerHTML = '<option value="all">Toutes</option>';
@@ -210,195 +136,187 @@
         });
       }
 
-      // — Tri —
+      // Sorting
       function sortLibrary(criteria, order) {
-        library.sort((a, b) => {
-          if (criteria === 'rating') {
-            const ra = a.rating, rb = b.rating;
-            return order === 'asc' ? ra - rb : rb - ra;
-          }
+        library.sort((a,b) => {
+          if (criteria === 'rating') return order==='asc' ? a.rating - b.rating : b.rating - a.rating;
           if (criteria === 'author') {
-            const A = (a.author || '').toLowerCase();
-            const B = (b.author || '').toLowerCase();
-            return order === 'asc' ? A.localeCompare(B) : B.localeCompare(A);
+            const A = (a.author||'').toLowerCase();
+            const B = (b.author||'').toLowerCase();
+            return order==='asc' ? A.localeCompare(B) : B.localeCompare(A);
           }
           return 0;
         });
       }
 
-      // — Affichage / stats —
+      // Render
       function render() {
-        enviesList.innerHTML = '';
-        lectureList.innerHTML = '';
-        finishedList.innerHTML = '';
-
-        let mangasFinished = 0, booksFinished = 0, pagesTotal = 0;
-        const yearFilter = yearSelect.value;
+        enviesList.innerHTML = lectureList.innerHTML = finishedList.innerHTML = '';
+        let mangasFinished=0, booksFinished=0, bdFinished=0, pagesTotal=0;
+        const yf = yearSelect.value;
         sortLibrary(sortCriteria.value, sortOrder.value);
-
         library.forEach((item, idx) => {
-          // filtre année
-          if (yearFilter !== 'all') {
-            const y = item.readDate ? item.readDate.substring(0, 4) : '';
-            if (y !== yearFilter) return;
-          }
-
-          // création carte
+          if (yf!=='all' && (item.readDate||'').substring(0,4) !== yf) return;
           const card = document.createElement('div');
-          card.className = 'card';
-          card.setAttribute('data-type', item.type);
+          card.className = 'card'; card.setAttribute('data-type', item.type);
           card.innerHTML = `
-        <img src="${item.cover}" alt="">
-        <h3>${item.title}</h3>
-        <p>Auteur : ${item.author}</p>
-        <p>Pages : ${item.read}/${item.pages}</p>
-        <input type="number" min="0" max="${item.pages}" value="${item.read}"
-               data-index="${idx}" class="progressInput">
-        <input type="month" value="${item.readDate || ''}" data-index="${idx}" class="readDate">
-        <div class="rating" data-index="${idx}">
-          ${[1, 2, 3, 4, 5].map(i =>
-            `<span class="star ${i <= item.rating ? 'filled' : ''}" data-value="${i}">&#9733;</span>`
-          ).join('')}
-        </div>
-        <button data-comment-toggle="${idx}" class="commentBtn">💬 Commentaire</button>
-        <div id="comment-${idx}" class="commentSection" style="display:none;">
-          <textarea data-index="${idx}" class="commentInput"
-                    placeholder="Tes pensées…">${item.comment}</textarea>
-          <button data-comment-save="${idx}" class="saveCommentBtn">💾 Sauvegarder</button>
-        </div>
-        <button data-delete="${idx}" class="deleteBtn">🗑️ Supprimer</button>
-      `;
-
-          // classification + stats
-          if (item.read === 0) {
-            enviesList.appendChild(card);
-          } else if (item.read < item.pages) {
-            lectureList.appendChild(card);
-          } else {
+            <img src="${item.cover}" alt="Couverture">
+            <h3>${item.title}</h3>
+            <p>Auteur : ${item.author}</p>
+            <p>Pages : ${item.read}/${item.pages}</p>
+            <input type="number" min="0" max="${item.pages}" value="${item.read}" data-index="${idx}" class="progressInput">
+            <input type="month" value="${item.readDate||''}" data-index="${idx}" class="readDate">
+            <div class="rating" data-index="${idx}">
+              ${[1,2,3,4,5].map(i => `<span class="star ${i<=item.rating?'filled':''}" data-value="${i}">&#9733;</span>`).join('')}
+            </div>
+            <button data-comment-toggle="${idx}" class="commentBtn">💬 Commentaire</button>
+            <div id="comment-${idx}" class="commentSection" style="display:none;">
+              <textarea data-index="${idx}" class="commentInput" placeholder="Tes pensées…">${item.comment}</textarea>
+              <button data-comment-save="${idx}" class="saveCommentBtn">💾 Sauvegarder</button>
+            </div>
+            <button data-delete="${idx}" class="deleteBtn">🗑️ Supprimer</button>
+          `;
+          if (item.read === 0) enviesList.appendChild(card);
+          else if (item.read < item.pages) lectureList.appendChild(card);
+          else {
             finishedList.appendChild(card);
             if (item.type === 'manga') mangasFinished++;
-            else booksFinished++;
+            else if (item.type === 'livre') booksFinished++;
+            else if (item.type === 'bd') bdFinished++;
             pagesTotal += item.read;
           }
         });
-
-        // mise à jour stats
         mangaCount.textContent = mangasFinished;
         bookCount.textContent = booksFinished;
+        bdCount.textContent = bdFinished;
         pageCount.textContent = pagesTotal;
-
         addEventListeners();
       }
 
-      // — Interactions dynamiques —
+      // Event listeners
       function addEventListeners() {
-        // progression
         document.querySelectorAll('.progressInput').forEach(input => {
-          input.onchange = e => {
-            const i = e.target.dataset.index;
-            library[i].read = +e.target.value;
-            saveLibrary();
-            render();
-          };
+          input.onchange = e => { library[e.target.dataset.index].read = +e.target.value; saveLibrary(); render(); };
         });
-        // date de lecture
         document.querySelectorAll('.readDate').forEach(input => {
-          input.onchange = e => {
-            const i = e.target.dataset.index;
-            library[i].readDate = e.target.value;
-            saveLibrary();
-          };
+          input.onchange = e => { library[e.target.dataset.index].readDate = e.target.value; saveLibrary(); };
         });
-        // notes
         document.querySelectorAll('.star').forEach(star => {
-          star.onclick = e => {
-            const i = e.target.closest('.rating').dataset.index;
-            library[i].rating = +e.target.dataset.value;
-            saveLibrary();
-            render();
-          };
+          star.onclick = e => { const i = star.closest('.rating').dataset.index; library[i].rating = +star.dataset.value; saveLibrary(); render(); };
         });
-        // commentaires
         document.querySelectorAll('.commentBtn').forEach(btn => {
-          btn.onclick = e => {
-            const i = e.target.dataset.commentToggle;
-            const sec = document.getElementById(`comment-${i}`);
-            sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
+          btn.onclick = e => { const i = btn.dataset.commentToggle; const sec = document.getElementById(`comment-${i}`);
+            sec.style.display = sec.style.display==='none' ? 'block' : 'none';
           };
         });
         document.querySelectorAll('.saveCommentBtn').forEach(btn => {
-          btn.onclick = e => {
-            const i = e.target.dataset.commentSave;
-            const ta = document.querySelector(`.commentInput[data-index="${i}"]`);
-            library[i].comment = ta.value;
-            saveLibrary();
-            btn.textContent = '✅ Sauvé';
-            setTimeout(() => btn.textContent = '💾 Sauvegarder', 1000);
+          btn.onclick = e => { const i = btn.dataset.commentSave; const ta = document.querySelector(`.commentInput[data-index="${i}"]`);
+            library[i].comment = ta.value; saveLibrary(); btn.textContent = '✅ Sauvé'; setTimeout(() => btn.textContent = '💾 Sauvegarder', 1000);
           };
         });
-        // suppression
         document.querySelectorAll('.deleteBtn').forEach(btn => {
-          btn.onclick = e => {
-            library.splice(e.target.dataset.delete, 1);
-            saveLibrary();
-            populateYearFilter();
-            render();
-          };
+          btn.onclick = e => { library.splice(e.target.dataset.delete, 1); saveLibrary(); populateYearFilter(); render(); };
         });
       }
 
-      // — Ajout de livre —
-      addBtn.onclick = () => {
-        const title = document.getElementById('title').value.trim();
-        const pages = +document.getElementById('pages').value;
-        const cover = document.getElementById('cover').value.trim();
-        const author = document.getElementById('author').value.trim();
-        const type = document.getElementById('type').value;
-        if (!title || !pages || !cover || !author) {
-          return alert('Tous les champs sont requis.');
-        }
-        library.push({
-          title, pages, read: 0, cover, author, type,
-          readDate: '', rating: 0, comment: ''
+      // API: Google Books pour tous types
+      async function fetchGoogleBooksSuggestions(query) {
+        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5`);
+        const json = await res.json();
+        return (json.items || []).map(item => {
+          const info = item.volumeInfo || {};
+          return {
+            title: info.title || '',
+            author: (info.authors && info.authors[0]) || '',
+            cover: (info.imageLinks && (info.imageLinks.thumbnail || info.imageLinks.smallThumbnail)) || '',
+            pages: info.pageCount || ''
+          };
         });
-        saveLibrary();
-        populateYearFilter();
-        render();
+      }
+      let docsCache = [];
+      let debounce;
+      bookSearch.addEventListener('input', () => {
+        clearTimeout(debounce);
+        const q = bookSearch.value.trim();
+        if (q.length < 3) { suggestions.innerHTML = ''; return; }
+        debounce = setTimeout(async () => {
+          docsCache = await fetchGoogleBooksSuggestions(q);
+          suggestions.innerHTML = docsCache.map((it, i) => `<div data-index="${i}"><strong>${it.title}</strong><br><small>${it.author}</small></div>`).join('');
+          suggestions.querySelectorAll('div').forEach(div => div.addEventListener('click', () => {
+            const d = docsCache[div.dataset.index];
+            titleInput.value = d.title;
+            authorInput.value = d.author;
+            pagesInput.value = d.pages;
+            coverInput.value = d.cover;
+            suggestions.innerHTML = '';
+            bookSearch.value = '';
+          }));
+        }, 300);
+      });
 
-        // reset
-        ['title', 'pages', 'cover', 'author'].forEach(id => document.getElementById(id).value = '');
+      // Import/Export handlers
+      document.getElementById('exportBtn').onclick = () => {
+        const data = JSON.stringify(library, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'bibliotheque.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      };
+      document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+      document.getElementById('importFile').onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = evt => {
+          try {
+            const imp = JSON.parse(evt.target.result);
+            if (!Array.isArray(imp)) throw Error();
+            library = imp.map(item => ({
+              title: item.title || '', author: item.author || '', pages: item.pages || 0, read: item.read || 0,
+              cover: item.cover || '', type: item.type || 'livre', readDate: item.readDate || '', rating: item.rating || 0, comment: item.comment || ''
+            }));
+            saveLibrary(); populateYearFilter(); render(); alert('Importation réussie ! 📚');
+          } catch {
+            alert('Échec de l’import : fichier invalide');
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
       };
 
-      // — Écouteurs de tri & filtre & thème —
-      sortCriteria.onchange = render;
-      sortOrder.onchange = render;
-      yearSelect.onchange = render;
+      // Add book
+      addBtn.onclick = () => {
+        const t = titleInput.value.trim();
+        const a = authorInput.value.trim();
+        const p = +pagesInput.value;
+        const c = coverInput.value.trim();
+        const tp = typeSelect.value;
+        if (!t || !a || !p || !c) return alert('Tous les champs sont requis.');
+        library.push({ title: t, author: a, pages: p, read: 0, cover: c, type: tp, readDate: '', rating: 0, comment: '' });
+        saveLibrary(); populateYearFilter(); render();
+        [titleInput, authorInput, pagesInput, coverInput].forEach(i => i.value = '');
+      };
 
-      // thème
+      // Sort, filter, theme listeners
+      sortCriteria.onchange = render;
+      sortOrder.onchange    = render;
+      yearSelect.onchange   = render;
       const savedTheme = localStorage.getItem('theme') || 'nature';
       document.body.className = savedTheme;
       themeSelect.value = savedTheme;
-      themeSelect.onchange = () => {
-        document.body.className = themeSelect.value;
-        localStorage.setItem('theme', themeSelect.value);
-      };
+      themeSelect.onchange = () => { document.body.className = themeSelect.value; localStorage.setItem('theme', themeSelect.value); };
 
-      // Initialisation
+      // Init
       loadLibrary();
-      //  — Collapsibles sections —
       document.querySelectorAll('h2.collapsible').forEach(header => {
-        // Initialisation : on part de sections ouvertes
-        header.classList.remove('collapsed');
         const list = header.nextElementSibling;
+        header.classList.remove('collapsed');
         list.style.display = 'grid';
-
-        header.addEventListener('click', () => {
+        header.onclick = () => {
           header.classList.toggle('collapsed');
           list.style.display = header.classList.contains('collapsed') ? 'none' : 'grid';
-        });
+        };
       });
     });
   </script>
 </body>
-
 </html>
